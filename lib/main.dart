@@ -37,10 +37,11 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   late EthereumAddress ownerAddress;
   final String rpcUrl = "http://localhost:8545";
   final EthereumAddress contractAddress =
-      EthereumAddress.fromHex("0x92d1F5F97B41a8cf784dEA4cd88fD663C7B3056E");
+      EthereumAddress.fromHex("0x40a6fC69572Acbb19eADd2f612fDaE660C3fdf04");
   late DeployedContract contract;
   final String privateKey =
       "0x6008f0635c53409391e87ffaa944a7f01f0b3a645f84b012e3f42c21cd0b7275";
+
   @override
   void initState() {
     super.initState();
@@ -54,18 +55,16 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   }
 
   Future<void> loginUser() async {
-    final address = addressController.text;
+    final name = nameController.text;
     final password = passwordController.text;
 
-    if (address.isEmpty || password.isEmpty) {
+    if (name.isEmpty || password.isEmpty) {
       showError("Please fill in both fields.");
       return;
     }
 
-    userAddress = EthereumAddress.fromHex(address);
-    final result =
-        await callFunction("authenticateUser", [userAddress, password]);
-
+    final result = await callFunction("authenticateUser", [name, password]);
+    print(result);
     if (result[0]) {
       Navigator.pushReplacement(
         context,
@@ -79,10 +78,11 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
   Future<void> registerUser() async {
     final name = nameController.text;
     final address = addressController.text;
+    final password = passwordController.text;
     final referrerAddress = referrerController.text;
 
-    if (name.isEmpty || address.isEmpty) {
-      showError("Please fill in both name and address.");
+    if (name.isEmpty || address.isEmpty || password.isEmpty) {
+      showError("Please fill in all fields.");
       return;
     }
 
@@ -91,7 +91,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
         ? EthereumAddress.fromHex(referrerAddress)
         : EthereumAddress.fromHex("0x0000000000000000000000000000000000000000");
 
-    final result = await submitTransaction("registerUser", [name, referrer]);
+    final result = await submitTransaction("registerUser",
+        [name, password, EthereumAddress.fromHex(address), referrer]);
 
     showSuccess("Registration successful");
   }
@@ -164,8 +165,8 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
         child: Column(
           children: [
             TextField(
-              controller: addressController,
-              decoration: InputDecoration(labelText: "Ethereum Address"),
+              controller: nameController,
+              decoration: InputDecoration(labelText: "name"),
             ),
             TextField(
               controller: passwordController,
@@ -182,7 +183,12 @@ class _AuthenticationPageState extends State<AuthenticationPage> {
             ),
             TextField(
               controller: addressController,
-              decoration: InputDecoration(labelText: "Eth address"),
+              decoration: InputDecoration(labelText: "Ethereum Address"),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: "Password"),
+              obscureText: true,
             ),
             TextField(
               controller: referrerController,
@@ -204,6 +210,10 @@ class SnailMarketPage extends StatefulWidget {
   @override
   _SnailMarketPageState createState() => _SnailMarketPageState();
 }
+
+// Rest of the SnailMarketPage code remains the same...
+
+// Rest of the SnailMarketPage code remains the same...
 
 class _SnailMarketPageState extends State<SnailMarketPage> {
   late Web3Client ethClient;

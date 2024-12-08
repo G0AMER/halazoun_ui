@@ -11,4 +11,7 @@ module.exports = {
             version: "0.5.16",  // Make sure the Solidity version is compatible
         },
     },
+    db: {
+        enabled: true,
+    },
 };

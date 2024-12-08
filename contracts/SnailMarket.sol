@@ -2,6 +2,7 @@
 pragma solidity ^0.5.16;
 pragma experimental ABIEncoderV2;
 
+
 contract SnailMarket {
     struct Snail {
         uint256 id;
@@ -14,8 +15,10 @@ contract SnailMarket {
     }
 
     struct User {
+        uint256 userId; // Incremental user ID
         address userAddress;
         string name;
+        bytes32 passwordHash; // Store hashed password
         bool isAdmin;
         uint256 referralReward;
         uint256[] orderHistory;
@@ -53,7 +56,7 @@ contract SnailMarket {
     mapping(uint256 => Snail) private snails;
     mapping(address => User) private users;
     mapping(uint256 => Order) private orders;
-
+    mapping(uint256 => address) private userIdToAddress; // Map user IDs to addresses
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can perform this action");
         _;
@@ -82,25 +85,71 @@ contract SnailMarket {
         isPaused = !isPaused;
         emit MarketPaused(isPaused);
     }
+    uint256 private nextUserId = 0; // Start from 0 for better readability
+    function authenticateUser(string memory name, string memory password) public view returns (bool) {
+        require(bytes(name).length > 0, "Name cannot be empty");
+        require(bytes(password).length > 0, "Password cannot be empty");
 
-    function registerUser(string memory name, address referrer) public {
+        bytes32 passwordHash = keccak256(abi.encodePacked(password));
+        bool userFound = false;
+
+        for (uint256 i = 0; i < nextUserId; i++) {
+            address userAddress = userIdToAddress[i];
+            User storage user = users[userAddress];
+
+            if (keccak256(abi.encodePacked(user.name)) == keccak256(abi.encodePacked(name))) {
+                userFound = true;
+                require(user.passwordHash == passwordHash, "Incorrect password");
+                return true; // User authenticated successfully
+            }
+        }
+
+        require(userFound, "User not registered");
+        return false; // Default return if user not found
+    }
+
+
+
+
+    function registerUser(
+        string memory name,
+        string memory password,
+        address userAddress,
+        address referrer
+    ) public {
         require(bytes(name).length > 0, "Name cannot be empty");
         require(bytes(users[msg.sender].name).length == 0, "User already registered");
+        require(bytes(password).length > 0, "Password cannot be empty");
+
         uint256[] memory orderHistory;
         uint256[] memory favoriteSnails;
+
         users[msg.sender] = User({
-            userAddress: msg.sender,
+            userId: nextUserId,
+            userAddress: userAddress,
             name: name,
+            passwordHash: keccak256(abi.encodePacked(password)),
             isAdmin: false,
             referralReward: 0,
             orderHistory: orderHistory,
             favoriteSnails: favoriteSnails
         });
 
+        userIdToAddress[nextUserId] = msg.sender; // Map the new user ID to the address
+        nextUserId++; // Increment the user ID counter
+
         if (referrer != address(0) && referrer != msg.sender && bytes(users[referrer].name).length > 0) {
             users[referrer].referralReward += 1 ether;
         }
     }
+
+    function getUserById(uint256 userId) public view returns (string memory name, address userAddress) {
+        require(userId > 0 && userId < nextUserId, "Invalid user ID");
+        address addr = userIdToAddress[userId];
+        User storage user = users[addr];
+        return (user.name, user.userAddress);
+    }
+
 
     function addSnail(string memory name, uint256 price, uint256 stock, string memory category) public onlyAdmin {
         require(bytes(name).length > 0, "Snail name cannot be empty");
