@@ -1,0 +1,17 @@
+{
+  "name": "haazoun_ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/G0AMER/halazoun_ui.git"
+  },
+  "private": true,
+  "dependencies": {
+    "web3": "^4.16.0"
+  }
+}

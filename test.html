@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Blockchain App</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <script>
+        // Include Web3 library
+
+
+        // Connect to local Ethereum node (Ganache)
+        const web3 = new Web3('http://localhost:8545');
+
+        // Load contract ABI and address (Manually insert ABI and address)
+        const abi =
+            [
+                {
+                    "inputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": false,
+                            "internalType": "bool",
+                            "name": "isPaused",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "MarketPaused",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "rating",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "RatingAdded",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "user",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "reward",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "ReferralRewardClaimed",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "id",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "stock",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "category",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "SnailAdded",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "id",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "SnailDeleted",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "id",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "stock",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "category",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "SnailUpdated",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "buyer",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "quantity",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "totalPrice",
+                            "type": "uint256"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "Transaction",
+                    "type": "event"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "isPaused",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "nextOrderId",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "nextSnailId",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "owner",
+                    "outputs": [
+                        {
+                            "internalType": "address payable",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [],
+                    "name": "toggleMarketPause",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "referrer",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "registerUser",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "stock",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "category",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "addSnail",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "stock",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "category",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "updateSnail",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "deleteSnail",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "quantity",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "buySnails",
+                    "outputs": [],
+                    "payable": true,
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "rating",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "rateSnail",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "addFavoriteSnail",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": false,
+                    "inputs": [],
+                    "name": "claimReferralReward",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [],
+                    "name": "getAllSnails",
+                    "outputs": [
+                        {
+                            "internalType": "uint256[]",
+                            "name": "ids",
+                            "type": "uint256[]"
+                        },
+                        {
+                            "internalType": "string[]",
+                            "name": "names",
+                            "type": "string[]"
+                        },
+                        {
+                            "internalType": "uint256[]",
+                            "name": "prices",
+                            "type": "uint256[]"
+                        },
+                        {
+                            "internalType": "uint256[]",
+                            "name": "stocks",
+                            "type": "uint256[]"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "getAverageRating",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "userAddress",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "getUserDetails",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "bool",
+                            "name": "isAdmin",
+                            "type": "bool"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "referralReward",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256[]",
+                            "name": "orderHistory",
+                            "type": "uint256[]"
+                        },
+                        {
+                            "internalType": "uint256[]",
+                            "name": "favoriteSnails",
+                            "type": "uint256[]"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "constant": true,
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "snailId",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "getSnailDetails",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "name",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "price",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "stock",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "category",
+                            "type": "string"
+                        }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+        const contractAddress = "0x92d1F5F97B41a8cf784dEA4cd88fD663C7B3056E";
+
+        // Create a contract instance
+        const contract = new web3.eth.Contract(abi, contractAddress);
+
+        // Define the owner account and private key (not recommended for client-side usage)
+        let ownerAddress;
+
+        (async () => {
+            const accounts = await web3.eth.getAccounts();
+            ownerAddress = accounts[0]; // Owner address for transaction signing
+            console.log(`Owner Address: ${ownerAddress}`);
+        })();
+        const privateKey = "0x6008f0635c53409391e87ffaa944a7f01f0b3a645f84b012e3f42c21cd0b7275"; // Do NOT expose private keys in a browser environment
+
+        console.log(`Owner Address: ${ownerAddress}`);
+        console.log(`Contract Address: ${contractAddress}`);
+
+        // Utility functions
+        const fromWei = (value) => web3.utils.fromWei(value.toString(), 'ether');
+        const toWei = (value) => web3.utils.toWei(value.toString(), 'ether');
+
+        // Fetch all snails
+        async function fetchSnails() {
+            try {
+                const snails = await contract.methods.getAllSnails().call();
+                console.log(snails[0].map((id, index) => ({
+                    id,
+                    name: snails[1][index],
+                    price: fromWei(snails[2][index]), // from Wei to ETH
+                    stock: snails[3][index],
+                })));
+                return snails[0].map((id, index) => ({
+                    id,
+                    name: snails[1][index],
+                    price: fromWei(snails[2][index]), // from Wei to ETH
+                    stock: snails[3][index],
+                }));
+
+            } catch (error) {
+                console.error("Error fetching snails:", error.message);
+            }
+        }
+
+        // Fetch details of a single snail by ID
+        async function fetchSnailDetails(snailId) {
+            try {
+                const snail = await contract.methods.getSnailDetails(snailId).call();
+                return {
+                    name: snail[0],
+                    price: fromWei(snail[1]), // from Wei to ETH
+                    stock: snail[2],
+                };
+            } catch (error) {
+                console.error("Error fetching snail details:", error.message);
+            }
+        }
+
+        // Add a new snail to the market
+        async function addSnail(name, price, stock) {
+            try {
+                const tx = contract.methods.addSnail(name, toWei(price), stock,"Snail");
+                const gas = await tx.estimateGas({from: ownerAddress});
+                const txData = tx.encodeABI();
+                const signedTx = await web3.eth.accounts.signTransaction(
+                    {
+                        to: contractAddress,
+                        data: txData,
+                        gas,
+                        gasPrice: web3.utils.toWei('20', 'gwei'),
+                        nonce: await web3.eth.getTransactionCount(ownerAddress),
+                    },
+                    privateKey
+                );
+
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+                console.log("Transaction successful:", receipt);
+                return receipt;
+            } catch (error) {
+                console.error("Error adding snail:", error.message);
+            }
+        }
+
+        // Buy snails
+        async function buySnails(snailId, quantity, value) {
+            try {
+                const tx = contract.methods.buySnails(snailId, quantity);
+                const gas = await tx.estimateGas({from: ownerAddress, value: toWei(value)});
+                const txData = tx.encodeABI();
+                const signedTx = await web3.eth.accounts.signTransaction(
+                    {
+                        to: contractAddress,
+                        data: txData,
+                        value: toWei(value),
+                        gas,
+                        gasPrice: web3.utils.toWei('20', 'gwei'),
+                        nonce: await web3.eth.getTransactionCount(ownerAddress),
+                    },
+                    privateKey
+                );
+
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+                console.log("Transaction successful:", receipt);
+                return receipt;
+            } catch (error) {
+                console.error("Error buying snails:", error.message);
+            }
+        }
+
+        // Get contract balance
+        async function getContractBalance() {
+            try {
+                const balance = await web3.eth.getBalance(contractAddress);
+                console.log("Contract balance (ETH):", fromWei(balance));
+                return fromWei(balance);
+            } catch (error) {
+                console.error("Error getting balance:", error.message);
+            }
+        }
+
+        // Withdraw contract balance to owner
+        async function withdrawBalance() {
+            try {
+                const tx = contract.methods.withdrawFunds();
+                const gas = await tx.estimateGas({from: ownerAddress});
+                const txData = tx.encodeABI();
+                const signedTx = await web3.eth.accounts.signTransaction(
+                    {
+                        to: contractAddress,
+                        data: txData,
+                        gas,
+                        gasPrice: web3.utils.toWei('20', 'gwei'),
+                        nonce: await web3.eth.getTransactionCount(ownerAddress),
+                    },
+                    privateKey
+                );
+
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+                console.log("Transaction successful:", receipt);
+                return receipt;
+            } catch (error) {
+                console.error("Error withdrawing balance:", error.message);
+            }
+        }
+
+    </script>
+</head>
+<body>
+<h1>Snail Market</h1>
+
+<!-- Fetch all snails -->
+<section>
+    <h2>All Snails</h2>
+    <button onclick="fetchAndDisplaySnails()">Fetch All Snails</button>
+    <div id="snails-output"></div>
+</section>
+
+<!-- Fetch details of a single snail -->
+<section>
+    <h2>Snail Details</h2>
+    <input id="snail-id" placeholder="Snail ID" type="number"/>
+    <button onclick="fetchAndDisplaySnailDetails()">Fetch Details</button>
+    <div id="snail-details-output"></div>
+</section>
+
+<!-- Add a new snail -->
+<section>
+    <h2>Add Snail</h2>
+    <input id="snail-name" placeholder="Name" type="text"/>
+    <input id="snail-price" placeholder="Price (ETH)" step="0.01" type="number"/>
+    <input id="snail-stock" placeholder="Stock" type="number"/>
+    <button onclick="addNewSnail()">Add Snail</button>
+    <div id="add-snail-output"></div>
+</section>
+
+<!-- Buy snails -->
+<section>
+    <h2>Buy Snails</h2>
+    <input id="buy-snail-id" placeholder="Snail ID" type="number"/>
+    <input id="buy-quantity" placeholder="Quantity" type="number"/>
+    <input id="buy-value" placeholder="Value (ETH)" step="0.01" type="number"/>
+    <button onclick="buySnail()">Buy Snails</button>
+    <div id="buy-snail-output"></div>
+</section>
+
+<!-- Get contract balance -->
+<section>
+    <h2>Contract Balance</h2>
+    <button onclick="displayContractBalance()">Get Balance</button>
+    <div id="contract-balance-output"></div>
+</section>
+
+<!-- Withdraw contract balance -->
+<section>
+    <h2>Withdraw Funds</h2>
+    <button onclick="withdrawContractBalance()">Withdraw</button>
+    <div id="withdraw-output"></div>
+</section>
+
+<script>
+    // Add utility functions to display results in the interface
+    async function fetchAndDisplaySnails() {
+        const snails = await fetchSnails();
+        const output = document.getElementById("snails-output");
+        output.innerHTML = snails.map(snail => `
+                <div>
+                    <strong>ID:</strong> ${snail.id},
+                    <strong>Name:</strong> ${snail.name},
+                    <strong>Price:</strong> ${snail.price} ETH,
+                    <strong>Stock:</strong> ${snail.stock}
+                </div>
+            `).join("");
+    }
+
+    async function fetchAndDisplaySnailDetails() {
+        const snailId = document.getElementById("snail-id").value;
+        const snail = await fetchSnailDetails(snailId);
+        const output = document.getElementById("snail-details-output");
+        if (snail) {
+            output.innerHTML = `
+                    <strong>Name:</strong> ${snail.name},
+                    <strong>Price:</strong> ${snail.price} ETH,
+                    <strong>Stock:</strong> ${snail.stock}
+                `;
+        } else {
+            output.innerHTML = "Error fetching snail details.";
+        }
+    }
+
+    async function addNewSnail() {
+        const name = document.getElementById("snail-name").value;
+        const price = document.getElementById("snail-price").value;
+        const stock = document.getElementById("snail-stock").value;
+        const output = document.getElementById("add-snail-output");
+        const receipt = await addSnail(name, price, stock);
+        if (receipt) {
+            output.innerHTML = "Snail added successfully. Transaction hash: " + receipt.transactionHash;
+        } else {
+            output.innerHTML = "Error adding snail.";
+        }
+    }
+
+    async function buySnail() {
+        const snailId = document.getElementById("buy-snail-id").value;
+        const quantity = document.getElementById("buy-quantity").value;
+        const value = document.getElementById("buy-value").value;
+        const output = document.getElementById("buy-snail-output");
+        const receipt = await buySnails(snailId, quantity, value);
+        if (receipt) {
+            output.innerHTML = "Purchase successful. Transaction hash: " + receipt.transactionHash;
+        } else {
+            output.innerHTML = "Error purchasing snails.";
+        }
+    }
+
+    async function displayContractBalance() {
+        const balance = await getContractBalance();
+        const output = document.getElementById("contract-balance-output");
+        output.innerHTML = `Contract Balance: ${balance} ETH`;
+    }
+
+    async function withdrawContractBalance() {
+        const receipt = await withdrawBalance();
+        const output = document.getElementById("withdraw-output");
+        if (receipt) {
+            output.innerHTML = "Withdrawal successful. Transaction hash: " + receipt.transactionHash;
+        } else {
+            output.innerHTML = "Error withdrawing funds.";
+        }
+    }
+</script>
+</body>
+</html>
