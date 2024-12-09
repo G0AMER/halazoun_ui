@@ -21,7 +21,7 @@ contract("SnailMarket", (accounts) => {
         const names = allSnails[1];
         const prices = allSnails[2].map((price) => web3.utils.fromWei(price.toString(), "ether"));
         const stocks = allSnails[3].map((stock) => stock.toString());
-
+        console.log(allSnails);
         // Assertions for each snail
         assert.equal(names[0], "Garden Snail");
         assert.equal(prices[0], "0.001");

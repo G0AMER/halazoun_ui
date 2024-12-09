@@ -242,13 +242,6 @@ class _SnailMarketPageState extends State<SnailMarketPage> {
   }
 
   void _logout() {
-    // Clear user session or any necessary data
-    // For example, if you are using SharedPreferences to store user info:
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.remove('userAddress'); // Remove any stored user information
-      prefs.remove('isAdmin');
-    });
-
     // Optionally navigate to a login screen
     Navigator.pushReplacement(
       context,
