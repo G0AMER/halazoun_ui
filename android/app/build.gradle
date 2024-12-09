@@ -58,10 +58,19 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+    /*aaptOptions {
+        noCompress 'tflite'
+        noCompress 'lite'
+    }*/
 }
 
 flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    implementation 'org.tensorflow:tensorflow-lite:2.9.0'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.9.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.4.2'
+    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.9.0'// Use the correct TensorFlow version if needed
+}
