@@ -275,6 +275,16 @@ const String abi = '''[
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
       "payable": false,
@@ -300,9 +310,19 @@ const String abi = '''[
           "type": "address"
         },
         {
+          "internalType": "string",
+          "name": "userPrivateKey",
+          "type": "string"
+        },
+        {
           "internalType": "address",
           "name": "referrer",
           "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "role",
+          "type": "bool"
         }
       ],
       "name": "registerUser",
@@ -331,6 +351,11 @@ const String abi = '''[
           "internalType": "address",
           "name": "userAddress",
           "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "userPrivateKey",
+          "type": "string"
         }
       ],
       "payable": false,
@@ -537,7 +562,7 @@ const String abi = '''[
       "inputs": [
         {
           "internalType": "address",
-          "name": "userAddress",
+          "name": "userAddr",
           "type": "address"
         }
       ],
@@ -546,6 +571,16 @@ const String abi = '''[
         {
           "internalType": "string",
           "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "userAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "userPrivateKey",
           "type": "string"
         },
         {
@@ -608,5 +643,66 @@ const String abi = '''[
       "payable": false,
       "stateMutability": "view",
       "type": "function"
-    }]
-  ''';
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getOrderWithSnailDetails",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "orderId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "snailId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "quantity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "snailName",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "snailPrice",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "snailStock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "snailCategory",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]''';

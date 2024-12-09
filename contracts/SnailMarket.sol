@@ -17,6 +17,7 @@ contract SnailMarket {
     struct User {
         uint256 userId; // Incremental user ID
         address userAddress;
+        string userPrivateKey;
         string name;
         bytes32 passwordHash; // Store hashed password
         bool isAdmin;
@@ -85,37 +86,39 @@ contract SnailMarket {
         isPaused = !isPaused;
         emit MarketPaused(isPaused);
     }
+
     uint256 private nextUserId = 0; // Start from 0 for better readability
-    function authenticateUser(string memory name, string memory password) public view returns (bool) {
+    function authenticateUser(string memory name, string memory password) public view returns (bool, address, string memory) {
         require(bytes(name).length > 0, "Name cannot be empty");
         require(bytes(password).length > 0, "Password cannot be empty");
 
         bytes32 passwordHash = keccak256(abi.encodePacked(password));
         bool userFound = false;
-
+        address userAddress;
         for (uint256 i = 0; i < nextUserId; i++) {
-            address userAddress = userIdToAddress[i];
+            userAddress = userIdToAddress[i];
             User storage user = users[userAddress];
 
             if (keccak256(abi.encodePacked(user.name)) == keccak256(abi.encodePacked(name))) {
                 userFound = true;
                 require(user.passwordHash == passwordHash, "Incorrect password");
-                return true; // User authenticated successfully
+                return (true, userAddress, user.userPrivateKey); // User authenticated successfully
             }
         }
 
         require(userFound, "User not registered");
-        return false; // Default return if user not found
+        address nullAddress;
+        return (false, nullAddress, ""); // Default return if user not found
     }
-
-
 
 
     function registerUser(
         string memory name,
         string memory password,
         address userAddress,
-        address referrer
+        string memory userPrivateKey,
+        address referrer,
+        bool role
     ) public {
         require(bytes(name).length > 0, "Name cannot be empty");
         require(bytes(users[msg.sender].name).length == 0, "User already registered");
@@ -127,9 +130,10 @@ contract SnailMarket {
         users[msg.sender] = User({
             userId: nextUserId,
             userAddress: userAddress,
+            userPrivateKey: userPrivateKey,
             name: name,
             passwordHash: keccak256(abi.encodePacked(password)),
-            isAdmin: false,
+            isAdmin: role,
             referralReward: 0,
             orderHistory: orderHistory,
             favoriteSnails: favoriteSnails
@@ -143,15 +147,15 @@ contract SnailMarket {
         }
     }
 
-    function getUserById(uint256 userId) public view returns (string memory name, address userAddress) {
+    function getUserById(uint256 userId) public view returns (string memory name, address userAddress, string memory userPrivateKey) {
         require(userId > 0 && userId < nextUserId, "Invalid user ID");
         address addr = userIdToAddress[userId];
         User storage user = users[addr];
-        return (user.name, user.userAddress);
+        return (user.name, user.userAddress, user.userPrivateKey);
     }
 
 
-    function addSnail(string memory name, uint256 price, uint256 stock, string memory category) public onlyAdmin {
+    function addSnail(string memory name, uint256 price, uint256 stock, string memory category) public {
         require(bytes(name).length > 0, "Snail name cannot be empty");
         require(price > 0, "Price must be greater than zero");
         require(stock > 0, "Stock must be greater than zero");
@@ -168,7 +172,7 @@ contract SnailMarket {
         uint256 price,
         uint256 stock,
         string memory category
-    ) public onlyAdmin {
+    ) public {
         Snail storage snail = snails[snailId];
         require(snail.id == snailId, "Snail does not exist");
 
@@ -180,7 +184,7 @@ contract SnailMarket {
         emit SnailUpdated(snailId, name, price, stock, category);
     }
 
-    function deleteSnail(uint256 snailId) public onlyAdmin {
+    function deleteSnail(uint256 snailId) public {
         require(snails[snailId].id == snailId, "Snail does not exist");
         delete snails[snailId];
         emit SnailDeleted(snailId);
@@ -259,20 +263,22 @@ contract SnailMarket {
         return snail.totalRatings / snail.numRatings;
     }
 
-    function getUserDetails(address userAddress)
+    function getUserDetails(address userAddr)
     public
     view
     returns (
         string memory name,
+        address userAddress,
+        string memory userPrivateKey,
         bool isAdmin,
         uint256 referralReward,
         uint256[] memory orderHistory,
         uint256[] memory favoriteSnails
     )
     {
-        User storage user = users[userAddress];
+        User storage user = users[userAddr];
         require(bytes(user.name).length > 0, "User does not exist");
-        return (user.name, user.isAdmin, user.referralReward, user.orderHistory, user.favoriteSnails);
+        return (user.name, user.userAddress, user.userPrivateKey, user.isAdmin, user.referralReward, user.orderHistory, user.favoriteSnails);
     }
 
     function getSnailDetails(uint256 snailId)
@@ -288,5 +294,38 @@ contract SnailMarket {
         Snail storage snail = snails[snailId];
         require(snail.id == snailId, "Snail does not exist");
         return (snail.name, snail.price, snail.stock, snail.category);
+    }
+
+    function getOrderWithSnailDetails(uint256 _orderId)
+    public
+    view
+    returns (
+        uint256 orderId,
+        uint256 snailId,
+        uint256 quantity,
+        uint256 totalPrice,
+        uint256 timestamp,
+        string memory snailName,
+        uint256 snailPrice,
+        uint256 snailStock,
+        string memory snailCategory
+    )
+    {
+        Order storage order = orders[_orderId];
+        Snail storage snail = snails[order.snailId];
+
+        require(order.orderId == _orderId, "Order does not exist");
+
+        return (
+            order.orderId,
+            order.snailId,
+            order.quantity,
+            order.totalPrice,
+            order.timestamp,
+            snail.name,
+            snail.price,
+            snail.stock,
+            snail.category
+        );
     }
 }
