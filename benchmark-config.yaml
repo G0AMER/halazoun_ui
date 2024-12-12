@@ -1,0 +1,13 @@
+test:
+  name: Ganache Test
+  description: A simple performance test for Ganache
+  workers: 1
+
+blockchain:
+  name: ethereum
+  version: 1.0
+
+workload:
+  module: simple
+  arguments:
+    - key: value

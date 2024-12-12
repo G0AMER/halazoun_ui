@@ -1,0 +1,16 @@
+{
+  "caliper": {
+    "blockchain": "ethereum"
+  },
+  "ethereum": {
+    "url": "ws://127.0.0.1:8545"
+  },
+  "name": "ganache-network",
+  "version": "1.0",
+  "clients": {
+    "ganache-client": {
+      "type": "ethereum",
+      "url": "http://127.0.0.1:8545"
+    }
+  }
+}
