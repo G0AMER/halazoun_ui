@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:haazoun_ui/aiTest.dart';
 import 'package:http/http.dart'; // For Web3 HTTP client
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web3dart/web3dart.dart';
@@ -267,6 +268,15 @@ class _SnailMarketPageState extends State<SnailMarketPage> {
               ],
             ),
             actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()),
+                  );
+                },
+                child: Text("Search with AI"),
+              ),
               IconButton(
                 icon: Icon(Icons.logout),
                 onPressed: () {

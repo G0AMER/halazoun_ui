@@ -1,153 +1,117 @@
-import 'dart:typed_data'; // For handling binary data
+import 'dart:convert';
+import 'dart:html' as html;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart'
-    as img; // Add this package for image manipulation
-import 'package:image_picker/image_picker.dart'; // Image picker package for web and mobile
-import 'package:tflite/tflite.dart'; // TensorFlow Lite dependency for Flutter
+import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Escargot Classifier',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  Uint8List? _imageData; // Holds the image bytes
-  String _result = 'No classification yet';
-
-  // Initialize the TFLite model
-  Future<void> loadModel() async {
-    try {
-      print("Loading model...");
-      await Tflite.loadModel(
-        model: 'assets/escargot_classifier.tflite',
-      );
-      print("Model loaded successfully");
-    } catch (e) {
-      print("Error loading model: $e");
-      setState(() {
-        _result = 'Failed to load model';
-      });
-    }
-  }
-
-  Future<void> classifyImage(Uint8List imageBytes) async {
-    // Decode the image to manipulate it
-    img.Image? image = img.decodeImage(Uint8List.fromList(imageBytes));
-    if (image != null) {
-      // Resize the image to the required input size (e.g., 224x224 for many models)
-      image = img.copyResize(image, width: 224, height: 224);
-
-      // Convert the image to a byte array that TensorFlow Lite can process
-      var input = image.getBytes();
-
-      print("Running model on image...");
-
-      // Run the model on the preprocessed image
-      var recognitions = await Tflite.runModelOnBinary(
-        binary: input,
-      );
-
-      // Debugging output for recognitions
-      print("Recognition result: $recognitions");
-
-      if (recognitions != null && recognitions.isNotEmpty) {
-        setState(() {
-          _result = recognitions[0]['label'] ?? 'No classification';
-        });
-      } else {
-        setState(() {
-          _result = 'Could not classify the image';
-        });
-      }
-    } else {
-      setState(() {
-        _result = 'Image decoding failed';
-      });
-    }
-  }
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  void initState() {
-    super.initState();
-    loadModel(); // Load the TFLite model when the app starts
-  }
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Uint8List? _imageData;
+  String? _result;
 
   Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes(); // Convert file to bytes
+    final input = html.FileUploadInputElement()..accept = 'image/*';
+    input.click();
+
+    input.onChange.listen((e) async {
+      final file = input.files!.first;
+      final reader = html.FileReader();
+
+      reader.readAsArrayBuffer(file);
+      reader.onLoadEnd.listen((event) {
         setState(() {
-          _imageData = bytes;
-          _result = 'Classifying...'; // Indicate classification is in progress
+          _imageData = reader.result as Uint8List;
         });
-        await classifyImage(bytes); // Classify the selected image
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('No image selected')));
-      }
-    } catch (e) {
-      print("Error picking image: $e");
+      });
+    });
+  }
+
+  Future<void> _classifyImage() async {
+    if (_imageData == null) return;
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://127.0.0.1:5000/predict'),
+    );
+
+    request.files.add(http.MultipartFile.fromBytes('file', _imageData!,
+        filename: 'image.png'));
+    final response = await request.send();
+    print(response);
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final result = json.decode(responseData);
       setState(() {
-        _result = 'Failed to pick image';
+        var labels = [
+          "Helix Aspersa Maxima Gros Gris",
+          "Helix Aspersa Petit Gris",
+          "escargo Morguet",
+          "Helix aperta"
+        ];
+        _result = "You're searching for: ${labels[result['label']]}";
+        print(result['label']);
+      });
+    } else {
+      setState(() {
+        _result = "Error: Unable to classify image.";
       });
     }
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    Tflite.close(); // Close the TFLite model when the widget is disposed
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Escargot Classifier'),
+        title: const Text('Snail Type Recognition'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _imageData != null
-                ? Image.memory(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (_imageData != null)
+                SizedBox(
+                  width: screenWidth * 0.8,
+                  // Adjust image width to 80% of screen width
+                  height: screenHeight * 0.4,
+                  // Adjust image height to 40% of screen height
+                  child: Image.memory(
                     _imageData!,
-                    height: 200,
-                    width: 200,
-                    fit: BoxFit.cover,
-                  )
-                : Text('No image selected'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Pick Image'),
-            ),
-            SizedBox(height: 20),
-            Text(
-              _result,
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
+                    fit: BoxFit.contain, // Ensure the image fits well
+                  ),
+                ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _pickImage,
+                child: const Text("Select an Image"),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _classifyImage,
+                child: const Text("What type of snail is this?"),
+              ),
+              if (_result != null) ...[
+                const SizedBox(height: 20),
+                Text(
+                  _result!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ]
+            ],
+          ),
         ),
       ),
     );

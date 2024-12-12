@@ -1,7 +1,13 @@
+# Flask Server Code
+from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import io
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
 # Load the TFLite model
 def load_model(model_path):
     interpreter = tf.lite.Interpreter(model_path=model_path)
@@ -9,14 +15,14 @@ def load_model(model_path):
     return interpreter
 
 # Preprocess the image (resize and normalize)
-def preprocess_image(image_path, target_size=(224, 224)):
-    # Open the image and convert to RGB if it's not already
-    img = Image.open(image_path).convert("RGB")
+def preprocess_image(image_bytes, target_size=(224, 224)):
+    # Open the image from bytes
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-    # Resize the image to the target size (224x224 is common for many models)
+    # Resize the image to the target size
     img = img.resize(target_size)
 
-    # Convert image to numpy array and normalize (scaling pixel values to [0, 1])
+    # Convert image to numpy array and normalize (scale pixel values to [0, 1])
     img_array = np.array(img, dtype=np.float32) / 255.0
 
     # Expand dimensions to match the model's input shape (batch size, height, width, channels)
@@ -43,26 +49,33 @@ def run_inference(interpreter, input_data):
 
 # Decode the output (assuming the output is a label)
 def decode_output(output_data):
-    # Assuming the output is a probability distribution, you can get the predicted label
     predicted_label = np.argmax(output_data)
     return predicted_label
 
-def main():
-    # Load the model
-    model_path = 'assets/escargot_classifier.tflite'
-    interpreter = load_model(model_path)
+# Load model at server startup
+model_path = 'assets/escargot_classifier.tflite'
+interpreter = load_model(model_path)
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files['file']
+
+    # Read the file as bytes
+    image_bytes = file.read()
 
     # Preprocess the image
-    image_path = "C:/Users/gamer/Downloads/images/04-Helix aperta/Photo 12-14-22 08 56 54.jpg"
-    image_data = preprocess_image(image_path)
+    input_data = preprocess_image(image_bytes)
 
     # Run inference
-    output_data = run_inference(interpreter, image_data)
+    output_data = run_inference(interpreter, input_data)
 
-    # Decode the output (modify as per your model's output format)
+    # Decode the result
     label = decode_output(output_data)
-
-    print(f"Predicted label: {label}")
+    print(label)
+    return jsonify({"label": int(label)})
 
 if __name__ == '__main__':
-    main()
+    app.run()
