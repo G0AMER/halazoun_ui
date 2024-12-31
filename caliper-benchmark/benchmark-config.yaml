@@ -1,0 +1,10 @@
+test:
+  name: Ethereum Test
+  description: Test Ethereum integration
+  workers: 1
+  rateControl:
+    type: fixed-rate
+    opts:
+      tps: 10
+  workload:
+    module: benchmarks/scenario/simple.js

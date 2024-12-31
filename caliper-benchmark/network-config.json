@@ -1,0 +1,24 @@
+{
+  "caliper": {
+    "blockchain": "ethereum",
+    "command": {
+      "start": "docker-compose -f ./docker-compose.yml -d && sleep 60",
+      "end": "docker-compose -f ./docker-compose.yml down"
+    }
+  },
+  "ethereum": {
+    "url": "ws://localhost:8546",
+    "contractDeployerAddress": "0xE3e7b5eCa25fC6227ad6DDC894e655dB61d2919E",
+    "fromAddress": "0xE3e7b5eCa25fC6227ad6DDC894e655dB61d2919E",
+    "contracts": {
+      "simple": {
+        "path": "./src/SnailMarket.json",
+        "estimateGas": true,
+        "gas": {
+          "query": 100000,
+          "transfer": 70000
+        }
+      }
+    }
+  }
+}
